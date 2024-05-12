@@ -7,13 +7,12 @@ public static class GetComponentMethodHelper
     public static string Get(ITypeSymbol type, int getType)
     {
         var method = "";
-        var typeName = type.Name;
 
         method += "GetComponent";
         if (type is IArrayTypeSymbol arrayTypeSymbol)
         {
             method +="s";
-            typeName = arrayTypeSymbol.ElementType.Name;
+            type = arrayTypeSymbol.ElementType;
         }
         
         switch (getType)
@@ -22,7 +21,7 @@ public static class GetComponentMethodHelper
             case 2: method += "InParent"; break;
         }
 
-        method += $"<{typeName}>()";
+        method += $"<{type}>()";
         return method;
     }
 }
