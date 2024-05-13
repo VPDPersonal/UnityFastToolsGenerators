@@ -11,10 +11,16 @@ public sealed class UnityHandlerBody
     private const string SubscribesMethod = "private void SubsribesUnityHandler()";
     private const string UnsubscribesMethod = "private void UnsubsribesUnityHandler()";
     
-    private readonly CodeWriter _subscribesMethods = new(2);
-    private readonly CodeWriter _unsubscribesMethods = new(2);
+    private readonly CodeWriter _subscribesMethods;
+    private readonly CodeWriter _unsubscribesMethods;
     
     public int Length => _subscribesMethods.Length + _unsubscribesMethods.Length;
+    
+    public UnityHandlerBody(int minIndentLevel)
+    {
+        _subscribesMethods = new CodeWriter(minIndentLevel);
+        _unsubscribesMethods = new CodeWriter(minIndentLevel);
+    }
     
     public void Initialize(IReadOnlyList<UnityFastToolsMember<ISymbol>> members)
     {

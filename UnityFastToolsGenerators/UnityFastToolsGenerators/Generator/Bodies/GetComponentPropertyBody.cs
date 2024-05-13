@@ -12,9 +12,14 @@ public sealed class GetComponentPropertyBody
     // TODO Add custom name from config
     private const string PrefixName = "Cached";
     
-    private readonly CodeWriter _body = new(2);
+    private readonly CodeWriter _body;
     
     public int Length => _body.Length;
+    
+    public GetComponentPropertyBody(int minIndentLevel)
+    {
+        _body = new CodeWriter(minIndentLevel);
+    }
     
     public void Initialize(IReadOnlyCollection<UnityFastToolsMember<ISymbol>> members)
     {

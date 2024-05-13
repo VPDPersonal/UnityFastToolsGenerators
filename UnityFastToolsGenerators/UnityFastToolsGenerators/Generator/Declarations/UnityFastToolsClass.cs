@@ -6,13 +6,13 @@ namespace UnityFastToolsGenerators.Generator.Declarations;
 
 public readonly struct UnityFastToolsClass
 {
-    public readonly ClassDeclarationSyntax DeclarationSyntax;
+    public readonly TypeDeclarationSyntax DeclarationSyntax;
     public readonly IReadOnlyList<UnityFastToolsMember<ISymbol>> UnityHandlerMembers;
     public readonly IReadOnlyList<UnityFastToolsMember<ISymbol>> GetComponentMembers;
     public readonly IReadOnlyList<UnityFastToolsMember<ISymbol>> GetComponentPropertyMembers;
 
     public UnityFastToolsClass(
-        ClassDeclarationSyntax declarationSyntax, 
+        TypeDeclarationSyntax declarationSyntax, 
         IReadOnlyList<UnityFastToolsMember<ISymbol>> unityHandlerMembers,
         IReadOnlyList<UnityFastToolsMember<ISymbol>> getComponentMembers,
         IReadOnlyList<UnityFastToolsMember<ISymbol>> getComponentPropertyMembers)

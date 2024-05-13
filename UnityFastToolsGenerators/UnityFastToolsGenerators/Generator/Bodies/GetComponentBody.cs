@@ -11,10 +11,15 @@ public sealed class GetComponentBody
     // TODO Add custom name from config
     private const string GetComponentMethod = "private void GetUnityComponents()";
     
-    private readonly CodeWriter _body = new(2);
+    private readonly CodeWriter _body;
     
     public int Length => _body.Length;
-
+    
+    public GetComponentBody(int minIndentLevel)
+    {
+        _body = new CodeWriter(minIndentLevel);
+    }
+    
     public void Initialize(IReadOnlyCollection<UnityFastToolsMember<ISymbol>> members)
     {
         Clear();
