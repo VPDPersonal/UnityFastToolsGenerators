@@ -1,8 +1,8 @@
-using System.Text;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using UnityFastToolsGenerators.Generator.Declarations;
 using UnityFastToolsGenerators.Helpers;
+using UnityFastToolsGenerators.Helpers.Code;
+using UnityFastToolsGenerators.Generator.Declarations;
 
 namespace UnityFastToolsGenerators.Generator.Bodies;
 
@@ -11,19 +11,21 @@ public sealed class GetComponentBody
     // TODO Add custom name from config
     private const string GetComponentMethod = "private void GetUnityComponents()";
     
-    private readonly StringBuilder _body = new();
+    private readonly CodeWriter _body = new(2);
+    
+    public int Length => _body.Length;
 
     public void Initialize(IReadOnlyCollection<UnityFastToolsMember<ISymbol>> members)
     {
         Clear();
         if (members.Count == 0) return;
         
-        _body.AppendLine($"\t\t{GetComponentMethod}\n\t\t{{");
-        
-        foreach (var member in members)
-            Append(member);
-        
-        _body.AppendLine("\t\t}");
+        _body.AppendLine(GetComponentMethod);
+        using (_body.BeginBlockScope())
+        {
+            foreach (var member in members)
+                Append(member);
+        }
     }
 
     private void Append(UnityFastToolsMember<ISymbol> member)
@@ -41,7 +43,7 @@ public sealed class GetComponentBody
             default: return;
         }
 
-        _body.AppendLine($"\t\t\t{symbol.Name} = {GetComponentMethodHelper.Get(type, getType)};");
+        _body.AppendLine($"{symbol.Name} = {GetComponentMethodHelper.Get(type, getType)};");
     }
 
     public override string ToString() => 

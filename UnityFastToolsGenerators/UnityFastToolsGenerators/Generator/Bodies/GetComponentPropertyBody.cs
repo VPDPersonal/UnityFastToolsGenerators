@@ -1,9 +1,8 @@
-using System;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using UnityFastToolsGenerators.Data;
 using UnityFastToolsGenerators.Helpers;
+using UnityFastToolsGenerators.Helpers.Code;
 using UnityFastToolsGenerators.Generator.Declarations;
 
 namespace UnityFastToolsGenerators.Generator.Bodies;
@@ -13,7 +12,9 @@ public sealed class GetComponentPropertyBody
     // TODO Add custom name from config
     private const string PrefixName = "Cached";
     
-    private readonly StringBuilder _body = new();
+    private readonly CodeWriter _body = new(2);
+    
+    public int Length => _body.Length;
     
     public void Initialize(IReadOnlyCollection<UnityFastToolsMember<ISymbol>> members)
     {
@@ -21,6 +22,9 @@ public sealed class GetComponentPropertyBody
 
         foreach (var member in members)
             Append(member);
+        
+        if (_body.Length > 0)
+            _body.Length--;
     }
 
     private void Append(UnityFastToolsMember<ISymbol> member)
@@ -56,7 +60,9 @@ public sealed class GetComponentPropertyBody
         var propertyName = $"{PrefixName}{FieldHelper.GetPropertyNameFromField(name)}";
         var boolValue = type is IArrayTypeSymbol ? $"{name} != null && {name}.Length > 0" : name;
         
-        _body.AppendLine($"\t\t{AccessHelper.Get(access)} {type} {propertyName} => {boolValue} ? {name} : ({name} = {GetComponentMethodHelper.Get(type, getType)});");
+        _body
+            .AppendLine($"{AccessHelper.Get(access)} {type} {propertyName} => {boolValue} ? {name} : ({name} = {GetComponentMethodHelper.Get(type, getType)});")
+            .AppendLine();
     }
 
     public override string ToString() =>

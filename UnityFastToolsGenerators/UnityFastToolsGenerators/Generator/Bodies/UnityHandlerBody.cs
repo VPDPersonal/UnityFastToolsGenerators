@@ -1,6 +1,6 @@
-using System.Text;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using UnityFastToolsGenerators.Helpers.Code;
 using UnityFastToolsGenerators.Generator.Declarations;
 
 namespace UnityFastToolsGenerators.Generator.Bodies;
@@ -11,25 +11,27 @@ public sealed class UnityHandlerBody
     private const string SubscribesMethod = "private void SubsribesUnityHandler()";
     private const string UnsubscribesMethod = "private void UnsubsribesUnityHandler()";
     
-    private readonly StringBuilder _subscribesMethods = new();
-    private readonly StringBuilder _unsubscribesMethods = new();
-
-    public void Initialize(IReadOnlyCollection<UnityFastToolsMember<ISymbol>> members)
+    private readonly CodeWriter _subscribesMethods = new(2);
+    private readonly CodeWriter _unsubscribesMethods = new(2);
+    
+    public int Length => _subscribesMethods.Length + _unsubscribesMethods.Length;
+    
+    public void Initialize(IReadOnlyList<UnityFastToolsMember<ISymbol>> members)
     {
         Clear();
         if (members.Count == 0) return;
 
-        _subscribesMethods.AppendLine($"\t\t{SubscribesMethod}\n\t\t{{");
-        _unsubscribesMethods.AppendLine($"\t\t{UnsubscribesMethod}\n\t\t{{");
+        _subscribesMethods.AppendLine(SubscribesMethod).BeginBlock();
+        _unsubscribesMethods.AppendLine(UnsubscribesMethod).BeginBlock();
         
-        foreach (var member in members)
-            Append(member);
+        for (var i = 0; i < members.Count; i++)
+            Append(i, members[i]);
         
-        _subscribesMethods.AppendLine("\t\t}");
-        _unsubscribesMethods.AppendLine("\t\t}");
+        _subscribesMethods.EndBlock();
+        _unsubscribesMethods.EndBlock();
     }
 
-    private void Append(UnityFastToolsMember<ISymbol> member)
+    private void Append(int index, UnityFastToolsMember<ISymbol> member)
     {
         var attribute = member.Attribute;
         if (attribute.NamedArguments.Length + attribute.ConstructorArguments.Length < 2) return;
@@ -49,13 +51,25 @@ public sealed class UnityHandlerBody
         if (isCollection)
         {
             const string itemName = "item";
-            var foreachText = $"\t\t\tforeach(var {itemName} in {symbolName})";
+            var foreachText = $"foreach(var {itemName} in {symbolName})";
             
-            _subscribesMethods.AppendLine(foreachText);
-            _subscribesMethods.AppendLine($"\t{GetAddListener(itemName)}");
+            if (index > 0)
+            {
+                _subscribesMethods.AppendLine();
+                _unsubscribesMethods.AppendLine();
+            }
             
-            _unsubscribesMethods.AppendLine(foreachText);
-            _unsubscribesMethods.AppendLine($"\t{GetRemoveListener(itemName)}");
+            _subscribesMethods
+                .AppendLine(foreachText)
+                .IncreaseIndent()
+                .AppendLine(GetAddListener(itemName))
+                .DecreaseIndent();
+            
+            _unsubscribesMethods
+                .AppendLine(foreachText)
+                .IncreaseIndent()
+                .AppendLine(GetRemoveListener(itemName))
+                .DecreaseIndent();
         }
         else
         {
@@ -65,15 +79,15 @@ public sealed class UnityHandlerBody
         return;
 
         string GetAddListener(string name) =>
-            $"\t\t\t{name}.{eventName}.AddListener({methodName});";
+            $"{name}.{eventName}.AddListener({methodName});";
         
         string GetRemoveListener(string name) =>
-            $"\t\t\t{name}.{eventName}.RemoveListener({methodName});";
+            $"{name}.{eventName}.RemoveListener({methodName});";
     }
 
     public override string ToString()
     {
-        return _subscribesMethods.Length > 0 
+        return _subscribesMethods.Length + _unsubscribesMethods.Length > 0 
             ? $"{_subscribesMethods}\n{_unsubscribesMethods}" 
             : "";
     }
