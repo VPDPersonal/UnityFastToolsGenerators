@@ -15,7 +15,7 @@ using UnityFastToolsGenerators.Descriptions.UnityFastTools;
 namespace UnityFastToolsGenerators.Generator;
 
 [Generator]
-public class UnityFastToolsGenerator : IIncrementalGenerator
+public sealed class UnityFastToolsGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -38,7 +38,6 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
 
         foreach (var member in declaration.Members)
         {
-            // TODO Add Diagnostic
             if (member is IndexerDeclarationSyntax)
                 continue;
             
@@ -53,18 +52,16 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
                 {
                     case AttributesDescription.GetComponentFull:
                     {
-                        // TODO Add Diagnostic
                         if (member is PropertyDeclarationSyntax propertyDeclaration)
-                            return propertyDeclaration.HasAccessor(SyntaxKind.SetKeyword) ? ReturnTrue() : default;
+                            return propertyDeclaration.HasAccessor(SyntaxKind.SetAccessorDeclaration) ? ReturnTrue() : default;
                         
                         return ReturnTrue();
                     }
                     
                     case AttributesDescription.UnityHandlerFull:
                     {
-                        // TODO Add Diagnostic
                         if (member is PropertyDeclarationSyntax propertyDeclaration)
-                            return propertyDeclaration.HasAccessor(SyntaxKind.GetKeyword) ? ReturnTrue() : default;
+                            return propertyDeclaration.HasAccessor(SyntaxKind.GetAccessorDeclaration) ? ReturnTrue() : default;
                         
                         return ReturnTrue();
                     }
@@ -87,7 +84,6 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
 
     private static void GenerateCode(SourceProductionContext context, Compilation compilation, TypeDeclarationSyntax declaration)
     {
-        // TODO Add Diagnostic
         if (!TryGetModifiers(declaration, out var modifiers)) return;
         
         var name = declaration.Identifier.Text;
@@ -135,7 +131,7 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
         
         foreach (var modifier in declaration.Modifiers)
         {
-            if (modifier.ToString() == "partial")
+            if (modifier.IsKind(SyntaxKind.PartialKeyword))
                 isPartial = true;
             
             if (modifiers.Length > 0) modifiers.Append(" ");

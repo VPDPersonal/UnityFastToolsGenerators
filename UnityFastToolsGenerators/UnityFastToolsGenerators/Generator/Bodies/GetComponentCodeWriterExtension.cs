@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using UnityFastToolsGenerators.Helpers.Code;
 using UnityFastToolsGenerators.Helpers.UnityFastTools;
 using UnityFastToolsGenerators.Generator.Declarations;
+using UnityFastToolsGenerators.Descriptions.UnityEngine;
 
 namespace UnityFastToolsGenerators.Generator.Bodies;
 
-public static class GetComponentCodeWriterExtension 
+public static class GetComponentCodeWriterExtension
 {
+    private const string MethodParameterName = "unityComponent";
     // TODO Add custom name from config
-    private const string GetComponentMethod = "private void GetUnityComponents(UnityEngine.Component unityComponent)";
+    private const string GetComponentMethod = $"private void GetUnityComponents({ClassesDescription.ComponentFull} {MethodParameterName})";
     
     public static void AppendGetComponent(
         this CodeWriter writer,
@@ -34,7 +36,7 @@ public static class GetComponentCodeWriterExtension
         if (type == null) return;
         
         GetAttributeArguments(member.Attribute, out var whereGet);
-        writer.AppendLine($"{symbol.Name} = unityComponent.{GetComponentMethodHelper.Get(type, whereGet)};");
+        writer.AppendLine($"{symbol.Name} = {MethodParameterName}.{GetComponentMethodHelper.Get(type, whereGet)};");
     }
     
     private static ITypeSymbol? GetSymbolType(ISymbol symbol) => symbol switch
