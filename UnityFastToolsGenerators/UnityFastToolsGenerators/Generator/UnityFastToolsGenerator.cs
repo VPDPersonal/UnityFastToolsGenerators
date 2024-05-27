@@ -1,15 +1,19 @@
+using System.IO;
 using System.Text;
+using System.Linq;
 using Microsoft.CodeAnalysis;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
-using System.Linq;
-using UnityFastToolsGenerators.Data;
+using Microsoft.CodeAnalysis.CSharp;
 using UnityFastToolsGenerators.Helpers;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using UnityFastToolsGenerators.Generator.Bodies;
-using UnityFastToolsGenerators.Generator.Declarations;
 using UnityFastToolsGenerators.Helpers.Code;
+using UnityFastToolsGenerators.Generator.Bodies;
+using UnityFastToolsGenerators.Helpers.Declarations;
+using UnityFastToolsGenerators.Generator.Declarations;
+using UnityFastToolsGenerators.Descriptions.UnityFastTools;
 
 namespace UnityFastToolsGenerators.Generator;
 
@@ -18,53 +22,135 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // TODO add StructDeclarationSyntax
         var provider = context.SyntaxProvider.CreateSyntaxProvider(
-                predicate: static (node, _) => node is TypeDeclarationSyntax, 
+                predicate: static (node, _) => node is ClassDeclarationSyntax or StructDeclarationSyntax, 
                 transform: static (syntaxContext, _) => FindUnityFastToolClass(syntaxContext))
             .Where(foundForSourceGenerator => foundForSourceGenerator.IsNeed)
             .Select((foundForSourceGenerator, _) => foundForSourceGenerator.Container);
-
+        
         var combineProvider = context.CompilationProvider.Combine(provider.Collect());
         
         context.RegisterSourceOutput(
             source: combineProvider,
             action: (productionContext, tuple) => GenerateCode(productionContext, tuple.Left, tuple.Right));
     }
-
-    // TODO Finish after FindUnityFastToolsMembers
-    private static FoundForSourceGenerator<UnityFastToolsClass> FindUnityFastToolClass(GeneratorSyntaxContext context)
+    
+    private static FoundForGenerator<TypeDeclarationSyntax> FindUnityFastToolClass(GeneratorSyntaxContext context)
     {
         var declaration = (TypeDeclarationSyntax)context.Node;
-        
-        if (declaration is not ClassDeclarationSyntax && declaration is not StructDeclarationSyntax)
-            return new FoundForSourceGenerator<UnityFastToolsClass>(false, default);
-        
-        if (context.SemanticModel.GetDeclaredSymbol(declaration) is not INamedTypeSymbol symbol) 
-            return new FoundForSourceGenerator<UnityFastToolsClass>(false, default);
 
-        FindUnityFastToolsMembers(
-            symbol,
+        foreach (var member in declaration.Members)
+        {
+            // TODO Add Diagnostic
+            if (member is IndexerDeclarationSyntax)
+                continue;
+            
+            foreach (var attribute in member.AttributeLists.SelectMany(attributeList => attributeList.Attributes))
+            {
+                if (context.SemanticModel.GetSymbolInfo(attribute).Symbol is not IMethodSymbol attributeSymbol)
+                    continue;
+                
+                var attributeName = attributeSymbol.ContainingType?.ToDisplayString();
+                
+                switch (attributeName)
+                {
+                    case AttributesDescription.GetComponentFull:
+                    {
+                        // TODO Add Diagnostic
+                        if (member is PropertyDeclarationSyntax propertyDeclaration)
+                            return propertyDeclaration.HasAccessor(SyntaxKind.SetKeyword) ? ReturnTrue() : default;
+                        
+                        return ReturnTrue();
+                    }
+                    
+                    case AttributesDescription.UnityHandlerFull:
+                    {
+                        // TODO Add Diagnostic
+                        if (member is PropertyDeclarationSyntax propertyDeclaration)
+                            return propertyDeclaration.HasAccessor(SyntaxKind.GetKeyword) ? ReturnTrue() : default;
+                        
+                        return ReturnTrue();
+                    }
+                    
+                    case AttributesDescription.GetComponentPropertyFull: return ReturnTrue();
+                }
+            }
+        }
+        
+        return default;
+        
+        FoundForGenerator<TypeDeclarationSyntax> ReturnTrue() => new(true, declaration);
+    }
+
+    private static void GenerateCode(SourceProductionContext context, Compilation compilation, ImmutableArray<TypeDeclarationSyntax> declarations)
+    {
+        foreach (var declaration in declarations)
+            GenerateCode(context, compilation, declaration);
+    }
+
+    private static void GenerateCode(SourceProductionContext context, Compilation compilation, TypeDeclarationSyntax declaration)
+    {
+        // TODO Add Diagnostic
+        if (!TryGetModifiers(declaration, out var modifiers)) return;
+        
+        var name = declaration.Identifier.Text;
+        var namespaceName = declaration.GetNamespaceName();
+        var genericArguments = declaration.GetGenericArguments();
+        var fileType = declaration is ClassDeclarationSyntax ? "class" : "struct";
+
+        var codeWriter = new CodeWriter();
+        codeWriter.AppendLine("// <auto-generated>");
+        
+        if (!string.IsNullOrEmpty(namespaceName))
+        {
+            codeWriter
+                .AppendLine($"namespace {namespaceName}")
+                .BeginBlock();   
+        }
+        
+        codeWriter
+            .AppendLine($"{modifiers} {fileType} {name}{genericArguments}")
+            .BeginBlock();
+        
+        FindNeedMembers(
+            compilation,
+            declaration,
             out var getComponentMembers,
             out var unityHandlerMembers,
             out var getComponentPropertyMembers);
         
-        if (declaration is StructDeclarationSyntax)
+        codeWriter.AppendGetComponentProperty(getComponentPropertyMembers);
+        codeWriter.AppendGetComponent(getComponentMembers);
+        codeWriter.AppendUnityHandler(unityHandlerMembers);
+        
+        if (!string.IsNullOrEmpty(namespaceName))
+            codeWriter.EndBlock();
+        
+        codeWriter.EndBlock();
+        
+        context.AddSource($"{name}.FastTools.g.cs", codeWriter.GetSourceText());
+    }
+    
+    private static bool TryGetModifiers(TypeDeclarationSyntax declaration, out StringBuilder modifiers)
+    {
+        var isPartial = false;
+        modifiers = new StringBuilder();
+        
+        foreach (var modifier in declaration.Modifiers)
         {
-            getComponentMembers.Clear();
-            getComponentPropertyMembers.Clear();
+            if (modifier.ToString() == "partial")
+                isPartial = true;
+            
+            if (modifiers.Length > 0) modifiers.Append(" ");
+            modifiers.Append(modifier.ToString());
         }
         
-        if (getComponentMembers.Count > 0 || unityHandlerMembers.Count > 0 || getComponentPropertyMembers.Count > 0)
-            return new FoundForSourceGenerator<UnityFastToolsClass>(true, 
-                new UnityFastToolsClass(declaration, unityHandlerMembers, getComponentMembers, getComponentPropertyMembers)); 
-        
-        return new FoundForSourceGenerator<UnityFastToolsClass>(false, default); 
+        return isPartial;
     }
-
-    // TODO Finish
-    private static void FindUnityFastToolsMembers(
-        INamedTypeSymbol symbol,
+    
+    private static void FindNeedMembers(
+        Compilation compilation,
+        TypeDeclarationSyntax declaration,
         out List<UnityFastToolsMember<ISymbol>> getComponentMembers,
         out List<UnityFastToolsMember<ISymbol>> unityHandlerMembers,
         out List<UnityFastToolsMember<ISymbol>> getComponentPropertyMembers)
@@ -73,10 +159,13 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
         unityHandlerMembers = new List<UnityFastToolsMember<ISymbol>>();
         getComponentPropertyMembers = new List<UnityFastToolsMember<ISymbol>>();
         
+        var semanticModel = compilation.GetSemanticModel(declaration.SyntaxTree);
+        if (semanticModel.GetDeclaredSymbol(declaration) is not { } symbol) return;
+        
         foreach (var member in symbol.GetMembers())
         {
             if (member is not IFieldSymbol && member is not IPropertySymbol) continue;
-
+            
             var isReadOnly = false;
             var isWriteOnly = false;
 
@@ -90,112 +179,30 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
 
             foreach (var attribute in member.GetAttributes())
             {
-                var attributeName = attribute.AttributeClass?.Name ?? "";
+                var name = attribute.AttributeClass?.ToDisplayString();
                 
-                if (attributeName == AttributesData.GetComponentName)
+                switch (name)
                 {
-                    if (isReadOnly) continue;
-                    getComponentMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute));
-                }
-                else if (attributeName == AttributesData.UnityHandlerName)
-                {
-                    if (isWriteOnly) continue;
-                    unityHandlerMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute));
-                }
-                else if (attributeName == AttributesData.GetComponentPropertyName)
-                {
-                    getComponentPropertyMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute));
+                    case AttributesDescription.GetComponentFull:
+                    {
+                        if (isReadOnly) continue;
+                        getComponentMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute)); 
+                        
+                        break;
+                    }
+                    
+                    case AttributesDescription.UnityHandlerFull:
+                    {
+                        if (isWriteOnly) continue;
+                        unityHandlerMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute)); 
+                        
+                        break;
+                    }
+                    
+                    case AttributesDescription.GetComponentPropertyFull: 
+                        getComponentPropertyMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute)); break;
                 }
             }
         }
-    }
-
-    private static void GenerateCode(SourceProductionContext context, Compilation compilation, ImmutableArray<UnityFastToolsClass> unityFastToolsClasses)
-    {
-        foreach (var unityFastToolsClass in unityFastToolsClasses)
-            GenerateCode(context, compilation, unityFastToolsClass);
-    }
-
-    private static void GenerateCode(SourceProductionContext context, Compilation compilation, UnityFastToolsClass unityFastToolsClass)
-    {
-        var declaration = unityFastToolsClass.DeclarationSyntax;
-        var semanticModel = compilation.GetSemanticModel(declaration.SyntaxTree);
-        if (semanticModel.GetDeclaredSymbol(declaration) is not INamedTypeSymbol symbol) return;
-        
-        var name = symbol.Name;
-        var fileType = declaration is ClassDeclarationSyntax ? "class" : "struct";
-        
-        var modifiers = new StringBuilder();
-        foreach (var modifier in declaration.Modifiers)
-        {
-            if (modifier.ToString() == "partial") continue;
-            if (modifiers.Length > 0) modifiers.Append(" ");
-            modifiers.Append(modifier.ToString());
-        }
-        
-        var isGlobalNamespace = symbol.ContainingNamespace.IsGlobalNamespace;
-        var minIndentLevel = isGlobalNamespace ? 1 : 2;
-        
-        var getComponentBody = new GetComponentBody(minIndentLevel);
-        var unityHandlerBody = new UnityHandlerBody(minIndentLevel);
-        var getComponentPropertyBody = new GetComponentPropertyBody(minIndentLevel);
-        
-        getComponentBody.Initialize(unityFastToolsClass.GetComponentMembers);
-        unityHandlerBody.Initialize(unityFastToolsClass.UnityHandlerMembers);
-        getComponentPropertyBody.Initialize(unityFastToolsClass.GetComponentPropertyMembers);
-        
-        var body = new StringBuilder();
-        if (getComponentPropertyBody.Length > 0) body.AppendLine(getComponentPropertyBody.ToString());
-        if (getComponentBody.Length > 0) body.AppendLine(getComponentBody.ToString());
-        if (unityHandlerBody.Length > 0) body.AppendLine(unityHandlerBody.ToString());
-        if (body.Length > 1) body.Length -= 2;
-        
-        var code = GetCode(symbol, isGlobalNamespace, modifiers.ToString(), fileType, name, body.ToString());
-        context.AddSource($"{name}.FastTools.g.cs", SourceText.From(code, Encoding.UTF8));
-    }
-    
-    private static string GetCode(INamedTypeSymbol symbol, bool isGlobalNamespace, string modifiers, string fileType, string name, string body)
-    {
-        var code = new CodeWriter();
-        code.AppendLine("// <auto-generated/>");
-        
-        var genericTypes = new StringBuilder();
-        
-        if (symbol.IsGenericType)
-        {
-            genericTypes.Append("<");
-            foreach (var parameter in symbol.TypeParameters)
-                genericTypes.Append(parameter);
-            genericTypes.Append(">");
-        }
-        
-        if (!isGlobalNamespace)
-        {
-            var namespaceName = symbol.ContainingNamespace.ToDisplayString();
-            code.AppendLine($"namespace {namespaceName}")
-                .AppendLine("{")
-                .IncreaseIndent();
-        }
-        
-        code.AppendLine($"{modifiers} partial {fileType} {name}{genericTypes}")
-            .AppendLine("{");
-        
-        if (!isGlobalNamespace)
-            code.DecreaseIndent();
-        
-        code.AppendLine($"{body}");
-        
-        if (!isGlobalNamespace)
-            code.IncreaseIndent();
-        
-        code.AppendLine("}");
-        
-        if (!isGlobalNamespace)
-        {
-            code.DecreaseIndent()
-                .AppendLine("}");
-        }
-        
-        return code.ToString();
     }
 }

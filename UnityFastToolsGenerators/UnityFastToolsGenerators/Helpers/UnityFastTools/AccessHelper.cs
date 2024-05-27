@@ -1,4 +1,4 @@
-namespace UnityFastToolsGenerators.Helpers;
+namespace UnityFastToolsGenerators.Helpers.UnityFastTools;
 
 public static class AccessHelper
 {

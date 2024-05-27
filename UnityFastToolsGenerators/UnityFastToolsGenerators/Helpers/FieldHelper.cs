@@ -4,8 +4,8 @@ public static class FieldHelper
 {
     public static string GetPropertyNameFromField(string name)
     {
-        if (name.StartsWith("_")) name = name.Remove(0, 1);
-        else if (name.StartsWith("m_")) name = name.Remove(0, 2);
+        var prefixCount = GetPrefixCount();
+        name = name.Remove(0, prefixCount);
         
         var firstSymbol = name[0];
         if (char.IsLower(firstSymbol))
@@ -15,5 +15,9 @@ public static class FieldHelper
         }
         
         return name;
+        
+        // TODO Custom prefix from config
+        int GetPrefixCount() =>
+            name.StartsWith("_") ? 1 : name.StartsWith("m_") ? 2 : 0;
     }
 }

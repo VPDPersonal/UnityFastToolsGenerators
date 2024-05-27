@@ -1,39 +1,38 @@
 using System;
+using System.IO;
 using System.Text;
+using System.CodeDom.Compiler;
+using Microsoft.CodeAnalysis.Text;
 
 namespace UnityFastToolsGenerators.Helpers.Code;
 
-public class CodeWriter : IDisposable
+public sealed class CodeWriter
 {
-    private readonly StringBuilder _buffer;
-    private readonly int _minIndentLevel;
-    private int _indentLevel;
+    private readonly MemoryStream _sourceStream;
+    private readonly IndentedTextWriter _textWriter;
     
-    public int Length
+    public int Indent
     {
-        get => _buffer.Length;
-        set => _buffer.Length = value;
+        get => _textWriter.Indent;
+        set => _textWriter.Indent = value;
     }
     
-    public CodeWriter(int minIndentLevel = 0)
+    public CodeWriter()
     {
-        _buffer = new StringBuilder();
-        
-        _indentLevel = minIndentLevel;
-        _minIndentLevel = minIndentLevel;
+        _sourceStream = new MemoryStream();
+        var sourceStreamWriter = new StreamWriter(_sourceStream, Encoding.UTF8);
+        _textWriter = new IndentedTextWriter(sourceStreamWriter);
     }
     
     public CodeWriter Append(string value = "")
     {
-        _buffer.Append(value);
+        _textWriter.Write(value);
         return this;
     }
     
     public CodeWriter AppendLine(string value = "")
     {
-        if (string.IsNullOrEmpty(value)) _buffer.AppendLine();
-        else _buffer.AppendLine($"{new string(' ', _indentLevel * 4)}{value}");
-        
+        _textWriter.WriteLine(value);
         return this;
     }
     
@@ -61,29 +60,21 @@ public class CodeWriter : IDisposable
     
     public CodeWriter IncreaseIndent()
     {
-        _indentLevel++;
+        _textWriter.Indent++;
         return this;
     }
     
     public CodeWriter DecreaseIndent()
     {
-        if (_indentLevel <= 0) return this;
-        _indentLevel--;
-        
+        _textWriter.Indent--;
         return this;
     }
     
-    public void Clear()
+    public SourceText GetSourceText()
     {
-        _buffer.Clear();
-        _indentLevel = _minIndentLevel;
+        _textWriter.Flush();
+        return SourceText.From(_sourceStream, Encoding.UTF8, canBeEmbedded: true);
     }
-    
-    public override string ToString() =>
-        _buffer.ToString();
-    
-    public void Dispose() =>
-        Clear();
     
     private readonly struct IndentScope : IDisposable
     {
