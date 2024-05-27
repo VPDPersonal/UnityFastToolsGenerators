@@ -1,10 +1,7 @@
-using System.IO;
 using System.Text;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp;
 using UnityFastToolsGenerators.Helpers;
@@ -95,7 +92,7 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
         
         var name = declaration.Identifier.Text;
         var namespaceName = declaration.GetNamespaceName();
-        var genericArguments = declaration.GetGenericArguments();
+        var genericArguments = declaration.GetGenericArgumentsForDeclaration();
         var fileType = declaration is ClassDeclarationSyntax ? "class" : "struct";
 
         var codeWriter = new CodeWriter();
@@ -151,13 +148,13 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
     private static void FindNeedMembers(
         Compilation compilation,
         TypeDeclarationSyntax declaration,
-        out List<UnityFastToolsMember<ISymbol>> getComponentMembers,
-        out List<UnityFastToolsMember<ISymbol>> unityHandlerMembers,
-        out List<UnityFastToolsMember<ISymbol>> getComponentPropertyMembers)
+        out List<UnityFastToolsMember> getComponentMembers,
+        out List<UnityFastToolsMember> unityHandlerMembers,
+        out List<UnityFastToolsMember> getComponentPropertyMembers)
     {
-        getComponentMembers = new List<UnityFastToolsMember<ISymbol>>();
-        unityHandlerMembers = new List<UnityFastToolsMember<ISymbol>>();
-        getComponentPropertyMembers = new List<UnityFastToolsMember<ISymbol>>();
+        getComponentMembers = new List<UnityFastToolsMember>();
+        unityHandlerMembers = new List<UnityFastToolsMember>();
+        getComponentPropertyMembers = new List<UnityFastToolsMember>();
         
         var semanticModel = compilation.GetSemanticModel(declaration.SyntaxTree);
         if (semanticModel.GetDeclaredSymbol(declaration) is not { } symbol) return;
@@ -186,7 +183,7 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
                     case AttributesDescription.GetComponentFull:
                     {
                         if (isReadOnly) continue;
-                        getComponentMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute)); 
+                        getComponentMembers.Add(new UnityFastToolsMember(member, attribute)); 
                         
                         break;
                     }
@@ -194,13 +191,13 @@ public class UnityFastToolsGenerator : IIncrementalGenerator
                     case AttributesDescription.UnityHandlerFull:
                     {
                         if (isWriteOnly) continue;
-                        unityHandlerMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute)); 
+                        unityHandlerMembers.Add(new UnityFastToolsMember(member, attribute)); 
                         
                         break;
                     }
                     
                     case AttributesDescription.GetComponentPropertyFull: 
-                        getComponentPropertyMembers.Add(new UnityFastToolsMember<ISymbol>(member, attribute)); break;
+                        getComponentPropertyMembers.Add(new UnityFastToolsMember(member, attribute)); break;
                 }
             }
         }

@@ -13,7 +13,7 @@ public static class GetComponentPropertyCodeWriterExtension
     // TODO Add custom name from config
     private const string PrefixName = "Cached";
     
-    public static void AppendGetComponentProperty(this CodeWriter writer, IReadOnlyCollection<UnityFastToolsMember<ISymbol>> members)
+    public static void AppendGetComponentProperty(this CodeWriter writer, IReadOnlyCollection<UnityFastToolsMember> members)
     {
         foreach (var member in members)
             Append(writer, member);
@@ -22,7 +22,7 @@ public static class GetComponentPropertyCodeWriterExtension
             writer.AppendLine();
     }
 
-    private static void Append(CodeWriter writer, UnityFastToolsMember<ISymbol> member)
+    private static void Append(CodeWriter writer, UnityFastToolsMember member)
     {
         var symbol = member.Symbol;
         var type = GetSymbolType(symbol);

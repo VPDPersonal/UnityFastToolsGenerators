@@ -2,13 +2,12 @@ using Microsoft.CodeAnalysis;
 
 namespace UnityFastToolsGenerators.Generator.Declarations;
 
-public readonly struct UnityFastToolsMember<TSymbol>
-    where TSymbol : ISymbol
+public readonly struct UnityFastToolsMember
 {
-    public readonly TSymbol Symbol;
+    public readonly ISymbol Symbol;
     public readonly AttributeData Attribute;
 
-    public UnityFastToolsMember(TSymbol symbol, AttributeData attribute)
+    public UnityFastToolsMember(ISymbol symbol, AttributeData attribute)
     {
         Symbol = symbol;
         Attribute = attribute;

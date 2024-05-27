@@ -9,11 +9,11 @@ namespace UnityFastToolsGenerators.Generator.Bodies;
 public static class GetComponentCodeWriterExtension 
 {
     // TODO Add custom name from config
-    private const string GetComponentMethod = "private void GetUnityComponents(UnityEngine.Object unityObject)";
+    private const string GetComponentMethod = "private void GetUnityComponents(UnityEngine.Component unityComponent)";
     
     public static void AppendGetComponent(
         this CodeWriter writer,
-        IReadOnlyCollection<UnityFastToolsMember<ISymbol>> members)
+        IReadOnlyCollection<UnityFastToolsMember> members)
     {
         if (members.Count == 0) return;
         
@@ -27,14 +27,14 @@ public static class GetComponentCodeWriterExtension
         writer.AppendLine();
     }
 
-    private static void Append(CodeWriter writer, UnityFastToolsMember<ISymbol> member)
+    private static void Append(CodeWriter writer, UnityFastToolsMember member)
     {
         var symbol = member.Symbol;
         var type = GetSymbolType(symbol);
         if (type == null) return;
         
         GetAttributeArguments(member.Attribute, out var whereGet);
-        writer.AppendLine($"{symbol.Name} = unityObject.{GetComponentMethodHelper.Get(type, whereGet)};");
+        writer.AppendLine($"{symbol.Name} = unityComponent.{GetComponentMethodHelper.Get(type, whereGet)};");
     }
     
     private static ITypeSymbol? GetSymbolType(ISymbol symbol) => symbol switch
