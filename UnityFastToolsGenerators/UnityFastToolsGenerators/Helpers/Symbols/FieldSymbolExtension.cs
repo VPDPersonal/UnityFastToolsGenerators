@@ -1,7 +1,12 @@
-namespace UnityFastToolsGenerators.Helpers;
+using Microsoft.CodeAnalysis;
 
-public static class FieldHelper
+namespace UnityFastToolsGenerators.Helpers.Symbols;
+
+public static class FieldSymbolExtension
 {
+    public static string GetPropertyName(this IFieldSymbol symbol) =>
+        GetPropertyNameFromField(symbol.Name);
+    
     public static string GetPropertyNameFromField(string name)
     {
         var prefixCount = GetPrefixCount();

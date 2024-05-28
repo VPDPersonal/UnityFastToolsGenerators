@@ -5,6 +5,7 @@ using UnityFastToolsGenerators.Helpers.Code;
 using UnityFastToolsGenerators.Helpers.UnityFastTools;
 using UnityFastToolsGenerators.Generator.Declarations;
 using UnityFastToolsGenerators.Descriptions.UnityFastTools;
+using UnityFastToolsGenerators.Helpers.Symbols;
 
 namespace UnityFastToolsGenerators.Generator.Bodies;
 
@@ -57,7 +58,9 @@ public static class GetComponentPropertyCodeWriterExtension
     private static string GetMethod(ISymbol symbol, ITypeSymbol type, int access, int whereGet)
     {
         var name = symbol.Name;
-        var propertyName = $"{PrefixName}{FieldHelper.GetPropertyNameFromField(name)}";
+        if (symbol is not IFieldSymbol fieldSymbol) return name;
+        
+        var propertyName = $"{PrefixName}{fieldSymbol.GetPropertyName()}";
         var boolValue = type is IArrayTypeSymbol ? $"{name} != null && {name}.Length > 0" : name;
         var getMethod = GetComponentMethodHelper.Get(type, whereGet);
         

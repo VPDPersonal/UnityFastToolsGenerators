@@ -52,28 +52,29 @@ public sealed class UnityFastToolsGenerator : IIncrementalGenerator
                 {
                     case AttributesDescription.GetComponentFull:
                     {
-                        if (member is PropertyDeclarationSyntax propertyDeclaration)
-                            return propertyDeclaration.HasAccessor(SyntaxKind.SetAccessorDeclaration) ? ReturnTrue() : default;
+                        if (member is not PropertyDeclarationSyntax propertyDeclaration) return True();
+                        if (propertyDeclaration.HasAccessor(SyntaxKind.SetAccessorDeclaration)) return True();
                         
-                        return ReturnTrue();
+                        continue;
                     }
                     
                     case AttributesDescription.UnityHandlerFull:
                     {
-                        if (member is PropertyDeclarationSyntax propertyDeclaration)
-                            return propertyDeclaration.HasAccessor(SyntaxKind.GetAccessorDeclaration) ? ReturnTrue() : default;
+                        if (member is not PropertyDeclarationSyntax propertyDeclaration) return True();
+                        if (propertyDeclaration.HasAccessor(SyntaxKind.GetAccessorDeclaration)) return True();
+                        if (propertyDeclaration.ExpressionBody != null) return True();
                         
-                        return ReturnTrue();
+                        continue;
                     }
                     
-                    case AttributesDescription.GetComponentPropertyFull: return ReturnTrue();
+                    case AttributesDescription.GetComponentPropertyFull: return True();
                 }
             }
         }
         
         return default;
         
-        FoundForGenerator<TypeDeclarationSyntax> ReturnTrue() => new(true, declaration);
+        FoundForGenerator<TypeDeclarationSyntax> True() => new(true, declaration);
     }
 
     private static void GenerateCode(SourceProductionContext context, Compilation compilation, ImmutableArray<TypeDeclarationSyntax> declarations)
