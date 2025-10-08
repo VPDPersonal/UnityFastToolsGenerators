@@ -1,9 +1,10 @@
 using System.Text;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using UnityFastToolsGenerators.Helpers;
+using Aspid.Generators.Helper.CodeWriters;
+using Aspid.Generators.Helper.Descriptions;
 using UnityFastToolsGenerators.Generator.Declarations;
-using UnityFastToolsGenerators.Descriptions.UnityEngine;
+using static Aspid.Generators.Helper.Descriptions.Classes;
 
 namespace UnityFastToolsGenerators.Generator.Bodies;
 
@@ -80,12 +81,14 @@ public static class UnityHandlerCodeWriteExtension
             type = type?.Replace("[]", "");
             
             // TODO Add custom type from config
-            eventName = type switch
+            if (type == Button)
             {
-                ClassesDescription.ButtonFull => GetEventName(0),
-                ClassesDescription.ToggleFull or ClassesDescription.SliderFull or ClassesDescription.ScrollRectFull => GetEventName(1),
-                _ => eventName
-            };
+                eventName = GetEventName(0);
+            }
+            else if (type == Button && type == Slider && type == ScrollRect)
+            {
+                eventName = GetEventName(1);
+            }
         }
         
         // TODO Add Diagnostic

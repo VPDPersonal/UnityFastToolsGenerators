@@ -3,8 +3,10 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Aspid.Generators.Helper;
+using Aspid.Generators.Helper.CodeWriters;
+using Aspid.Generators.Helper.Syntaxes;
 using Microsoft.CodeAnalysis.CSharp;
-using UnityFastToolsGenerators.Helpers;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using UnityFastToolsGenerators.Generator.Bodies;
 using UnityFastToolsGenerators.Helpers.Declarations;
@@ -52,7 +54,7 @@ public sealed class UnityFastToolsGenerator : IIncrementalGenerator
                     case AttributesDescription.GetComponentFull:
                     {
                         if (member is not PropertyDeclarationSyntax propertyDeclaration) return True();
-                        if (propertyDeclaration.HasAccessor(SyntaxKind.SetAccessorDeclaration)) return True();
+                        if (propertyDeclaration.HasSetAccessor()) return True();
                         
                         continue;
                     }
@@ -60,7 +62,7 @@ public sealed class UnityFastToolsGenerator : IIncrementalGenerator
                     case AttributesDescription.UnityHandlerFull:
                     {
                         if (member is not PropertyDeclarationSyntax propertyDeclaration) return True();
-                        if (propertyDeclaration.HasAccessor(SyntaxKind.GetAccessorDeclaration)) return True();
+                        if (propertyDeclaration.HasGetAccessor()) return True();
                         if (propertyDeclaration.ExpressionBody != null) return True();
                         
                         continue;
@@ -73,7 +75,7 @@ public sealed class UnityFastToolsGenerator : IIncrementalGenerator
         
         return default;
         
-        FoundForGenerator<TypeDeclarationSyntax> True() => new(true, declaration);
+        FoundForGenerator<TypeDeclarationSyntax> True() => new(declaration);
     }
 
     private static void GenerateCode(SourceProductionContext context, Compilation compilation, ImmutableArray<TypeDeclarationSyntax> declarations)

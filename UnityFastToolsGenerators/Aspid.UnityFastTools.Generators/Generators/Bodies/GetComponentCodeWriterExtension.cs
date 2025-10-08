@@ -1,9 +1,11 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using UnityFastToolsGenerators.Helpers;
+using Aspid.Generators.Helper.CodeWriters;
+using Aspid.Generators.Helper.Descriptions;
 using UnityFastToolsGenerators.Helpers.UnityFastTools;
 using UnityFastToolsGenerators.Generator.Declarations;
-using UnityFastToolsGenerators.Descriptions.UnityEngine;
+
+using static Aspid.Generators.Helper.Descriptions.Classes;
 
 namespace UnityFastToolsGenerators.Generator.Bodies;
 
@@ -11,7 +13,7 @@ public static class GetComponentCodeWriterExtension
 {
     private const string MethodParameterName = "unityComponent";
     // TODO Add custom name from config
-    private const string GetComponentMethod = $"private void GetUnityComponents({ClassesDescription.ComponentFull} {MethodParameterName})";
+    private static readonly string GetComponentMethod = $"private void GetUnityComponents({Component} {MethodParameterName})";
     
     public static void AppendGetComponent(
         this CodeWriter writer,
