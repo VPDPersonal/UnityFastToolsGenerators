@@ -6,7 +6,6 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp;
 using UnityFastToolsGenerators.Helpers;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using UnityFastToolsGenerators.Helpers.Code;
 using UnityFastToolsGenerators.Generator.Bodies;
 using UnityFastToolsGenerators.Helpers.Declarations;
 using UnityFastToolsGenerators.Generator.Declarations;
