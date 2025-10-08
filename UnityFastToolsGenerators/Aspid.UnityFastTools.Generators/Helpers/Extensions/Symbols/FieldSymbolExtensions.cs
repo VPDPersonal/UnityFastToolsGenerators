@@ -1,17 +1,17 @@
 using Microsoft.CodeAnalysis;
 
-namespace UnityFastToolsGenerators.Helpers.Symbols;
+namespace UnityFastToolsGenerators.Helpers.Extensions.Symbols;
 
-public static class FieldSymbolExtension
+public static class FieldSymbolExtensions
 {
     public static string GetPropertyName(this IFieldSymbol symbol) =>
-        GetPropertyNameFromField(symbol.Name);
+        GetPropertyName(symbol.Name);
     
-    public static string GetPropertyNameFromField(string name)
+    public static string GetPropertyName(string name)
     {
         var prefixCount = GetPrefixCount();
-        name = name.Remove(0, prefixCount);
-        
+        if (prefixCount > 0) name = name.Remove(0, prefixCount);
+
         var firstSymbol = name[0];
         if (char.IsLower(firstSymbol))
         {

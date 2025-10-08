@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using UnityFastToolsGenerators.Helpers.Code;
+using UnityFastToolsGenerators.Helpers;
 using UnityFastToolsGenerators.Helpers.UnityFastTools;
 using UnityFastToolsGenerators.Generator.Declarations;
 using UnityFastToolsGenerators.Descriptions.UnityEngine;

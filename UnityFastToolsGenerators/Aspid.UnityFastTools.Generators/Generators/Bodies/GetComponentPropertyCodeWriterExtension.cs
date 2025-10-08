@@ -1,11 +1,10 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using UnityFastToolsGenerators.Helpers;
-using UnityFastToolsGenerators.Helpers.Code;
 using UnityFastToolsGenerators.Helpers.UnityFastTools;
 using UnityFastToolsGenerators.Generator.Declarations;
+using UnityFastToolsGenerators.Helpers.Extensions.Symbols;
 using UnityFastToolsGenerators.Descriptions.UnityFastTools;
-using UnityFastToolsGenerators.Helpers.Symbols;
 
 namespace UnityFastToolsGenerators.Generator.Bodies;
 

@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <RootNamespace>UnityFastToolsGenerators</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -14,6 +15,10 @@
         </PackageReference>
         <PackageReference ExcludeAssets="runtime" Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0"/>
         <PackageReference ExcludeAssets="runtime" Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Generators\HandlerGenerator\Bodies\" />
     </ItemGroup>
 
 </Project>

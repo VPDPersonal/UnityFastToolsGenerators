@@ -1,7 +1,7 @@
 using System.Text;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using UnityFastToolsGenerators.Helpers.Code;
+using UnityFastToolsGenerators.Helpers;
 using UnityFastToolsGenerators.Generator.Declarations;
 using UnityFastToolsGenerators.Descriptions.UnityEngine;
 

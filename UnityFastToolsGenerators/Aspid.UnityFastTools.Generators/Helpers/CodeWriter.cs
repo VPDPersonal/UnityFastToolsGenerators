@@ -1,10 +1,10 @@
 using System;
+using System.CodeDom.Compiler;
 using System.IO;
 using System.Text;
-using System.CodeDom.Compiler;
 using Microsoft.CodeAnalysis.Text;
 
-namespace UnityFastToolsGenerators.Helpers.Code;
+namespace UnityFastToolsGenerators.Helpers;
 
 public sealed class CodeWriter
 {
@@ -33,6 +33,20 @@ public sealed class CodeWriter
     public CodeWriter AppendLine(string value = "")
     {
         _textWriter.WriteLine(value);
+        return this;
+    }
+
+    public CodeWriter AppendMultiline(string value)
+    {
+        var indent = Indent;
+        Indent = 0;
+
+        var tab = new string('\t', indent);
+        value = $"{tab}{value}";
+        value = value.Replace("\n", $"\n{tab}");
+        AppendLine(value);
+
+        Indent = indent;
         return this;
     }
     

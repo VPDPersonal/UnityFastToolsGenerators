@@ -20,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\UnityFastToolsGenerators\UnityFastToolsGenerators.csproj"/>
+        <ProjectReference Include="..\Aspid.UnityFastTools.Generators\Aspid.UnityFastTools.Generators.csproj" />
     </ItemGroup>
 
 
