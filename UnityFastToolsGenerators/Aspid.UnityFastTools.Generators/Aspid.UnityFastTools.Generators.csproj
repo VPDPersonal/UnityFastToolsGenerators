@@ -3,13 +3,14 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>13</LangVersion>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <RootNamespace>UnityFastToolsGenerators</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Aspid.Generators.Helper" Version="0.0.10" />
+        <PackageReference Include="Aspid.Generators.Helper" Version="0.0.1-alpha.4" />
+        <PackageReference Include="Aspid.Generators.Helper.Unity" Version="0.0.1-alpha.3" />
         <PackageReference ExcludeAssets="runtime" Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
