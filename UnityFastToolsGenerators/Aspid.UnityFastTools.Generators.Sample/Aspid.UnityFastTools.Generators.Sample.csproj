@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>UnityFastToolsGenerators.Sample</RootNamespace>
         <UnityVersion>6000.2.5f1</UnityVersion>
-        <LangVersion>14</LangVersion>
+        <LangVersion>9</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
