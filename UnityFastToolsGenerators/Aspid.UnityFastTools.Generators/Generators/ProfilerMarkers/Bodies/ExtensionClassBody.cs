@@ -25,8 +25,9 @@ public static class ExtensionClassBody
     {
         var symbol = type.Symbol;
         var typeName = symbol.Name;
-        var namespaceName = symbol.ContainingNamespace.ToDisplayString();
-        var hasNamespaceName = !string.IsNullOrWhiteSpace(namespaceName);
+
+        var hasNamespaceName = !symbol.ContainingNamespace.IsGlobalNamespace;
+        var namespaceName = hasNamespaceName ? symbol.ContainingNamespace.ToDisplayString() : null;
         
         var markerCallMembers = type.MarkerCalls
             .GroupBy(markerCall => markerCall.MethodSymbol, SymbolEqualityComparer.Default)
@@ -45,7 +46,6 @@ public static class ExtensionClassBody
             .BeginBlock()
             .AppendProfilerMarkers(markerCallMembers)
             .AppendWithoutMessage(symbol, markerCallMembers)
-            .AppendLine()
             .EndBlock()
             .EndBlockIf(hasNamespaceName);
         
