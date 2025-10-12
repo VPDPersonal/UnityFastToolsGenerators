@@ -4,7 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <RootNamespace>UnityFastToolsGenerators.Sample</RootNamespace>
-        <UnityVersion>6000.2.5f1</UnityVersion>
+        <UnityVersion>6000.2.7f2</UnityVersion>
         <LangVersion>9</LangVersion>
     </PropertyGroup>
 
